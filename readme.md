@@ -26,6 +26,16 @@ npm install --save-dev prettier-plugin-organize-imports
 
 _Note that `prettier` and `typescript` are peer dependencies, so make sure you have those installed in your project._
 
+### TypeScript 7
+
+TypeScript 7.0 does not include the programmatic language service API this plugin uses ([announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)). Until TypeScript 7.1 ships a new API, install the compatibility package next to TypeScript 7:
+
+```sh
+npm install --save-dev @typescript/typescript6
+```
+
+The plugin uses `@typescript/typescript6` automatically when `typescript` does not expose `createLanguageService`. Vue support still depends on that same API (via `vue-tsc`) and will not run against TypeScript 7.0's native compiler until Volar adds support.
+
 ## Usage
 
 ### Prettier 3
