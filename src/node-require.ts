@@ -1,8 +1,8 @@
 import { createRequire } from 'node:module';
 
 /**
- * This package is ESM, but the TypeScript language service API and Volar's Vue packages have to be
- * resolved and loaded synchronously (Prettier's `preprocess` hook is synchronous), and their exact
- * location depends on the consuming project. So we need a CommonJS `require` for those.
+ * This package is ESM, but it has to resolve the consuming project's own `typescript` from disk, and
+ * `import.meta.resolve` is not available on every Node version this plugin supports. So we need a
+ * CommonJS `require` for that lookup.
  */
 export const nodeRequire: NodeJS.Require = createRequire(import.meta.url);

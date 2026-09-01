@@ -4,22 +4,22 @@
 
 > Make sure that your import statements stay consistent no matter who writes them and what their preferences are.
 
-_This is a fork of [`prettier-plugin-organize-imports`](https://github.com/simonhaenisch/prettier-plugin-organize-imports) published as `@sroussey/prettier-plugin-organize-imports`. It follows the project's own TypeScript through the `typescript/unstable` API introduced in the TypeScript 7.1 nightlies, ships as **ESM only** (so it requires Prettier 3), and is written in TypeScript, built and tested with [Bun](https://bun.sh). The plugin's behaviour and options are otherwise unchanged._
+_This is a fork of [`prettier-plugin-organize-imports`](https://github.com/simonhaenisch/prettier-plugin-organize-imports) published as `@sroussey/prettier-plugin-organize-imports`. It organizes imports through the language server that ships with the project's own TypeScript 7, ships as **ESM only** (so it requires Prettier 3), and is written in TypeScript, built and tested with [Bun](https://bun.sh). The plugin's behaviour and options are otherwise unchanged._
 
-A plugin that makes Prettier organize your imports (i. e. sorts, combines and removes unused ones) using the `organizeImports` feature of the TypeScript language service API. This is the same as using the "Organize Imports" action in VS Code.
+A plugin that makes Prettier organize your imports (i. e. sorts, combines and removes unused ones) using TypeScript's own organize-imports code action. This is the same as using the "Organize Imports" action in VS Code.
 
 **Features**
 
-- 👌 No runtime dependencies; `prettier` and a TypeScript 7.1 nightly are the required peers.
+- 👌 No runtime dependencies; `prettier` and `typescript` are the required peers.
 - 📦 ESM only, shipped as a single bundled file with type declarations.
-- 💪 Supports `.js`, `.jsx`, `.ts`, `.tsx` and `.vue` files.
+- 💪 Supports `.js`, `.jsx`, `.ts` and `.tsx` files.
 - 🚀 Zero config.
 - 🤓 No more weird diffs or annoying merge conflicts in PRs caused by import statements.
 - 🤯 If your editor supports auto-imports, you'll stop thinking about your imports so much that you won't even care about their order anymore.
 
 **Caveat**
 
-This plugin inherits, extends, and then overrides the built-in Prettier parsers for `babel`, `babel-ts`, `typescript` and `vue`. This means that it is incompatible with other plugins that do the same; only the last loaded plugin that exports one of those parsers will function.
+This plugin inherits, extends, and then overrides the built-in Prettier parsers for `babel`, `babel-ts` and `typescript`. This means that it is incompatible with other plugins that do the same; only the last loaded plugin that exports one of those parsers will function.
 
 ## Installation
 
@@ -31,15 +31,15 @@ _`prettier` and `typescript` are the required peer dependencies. This package is
 
 ### TypeScript
 
-`typescript` is a required peer dependency, and it has to be a **7.1 nightly**:
+`typescript` is a required peer dependency, and the declared range is `>=7.1.0-dev`, i. e. a 7.1 nightly:
 
 ```sh
 npm install --save-dev typescript@next
 ```
 
-TypeScript 7.0 dropped the programmatic language service API this plugin was built on ([announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)), which is why version 5 of this plugin shipped its own `@typescript/typescript6` instead. TypeScript 7.1 reintroduces a programmatic API under the `typescript/unstable` entry points, so the plugin can go back to organizing imports with the same TypeScript your project and your editor use.
+TypeScript 7.0 dropped the in-process language service API this plugin was built on ([announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)), which is why version 5 shipped its own `@typescript/typescript6` instead. It did not drop organize-imports itself: the native compiler still implements it, and exposes it over LSP as a `source.organizeImports` code action. So the plugin now starts `tsc --lsp --stdio` from your own `typescript`, asks it for that code action, and applies the edits it returns. You are back to organizing with the same TypeScript your project and your editor use, and the plugin has no runtime dependency of its own.
 
-That API only exists in the nightlies and is explicitly unstable, hence the `>=7.1.0-dev` peer range: it excludes 7.0 and earlier, which cannot serve this plugin at all. Expect the range to tighten once 7.1 is released.
+The code itself works against any TypeScript 7 — it reads the code action's exact name out of the server's advertised capabilities rather than hard-coding it, because 7.0 spells it `source.organizeImports` and the 7.1 nightlies spell it `source.organizeImports.ts`. The peer range is narrower than that on purpose: this line tracks the nightlies, and that is what it is tested against. Widen it to `>=7.0` if you would rather stay on stable.
 
 ## Usage
 
@@ -81,13 +81,9 @@ Depending on your configuration, if you need the `React` import to stay even if 
 
 ### Vue.js
 
-Make sure that you have the optional peer dependency `vue-tsc` installed.
+**`.vue` files are not supported on this version.** Prettier still formats them, their imports are just left alone.
 
-```
-npm install --save-dev vue-tsc
-```
-
-If you're using Vue.js with Pug templates, you'll also need to install `@vue/language-plugin-pug` as a dev dependency, and configure it in `vueCompilerOptions` (see [usage](https://www.npmjs.com/package/@vue/language-plugin-pug)).
+Vue support worked by decorating TypeScript's in-process `LanguageService` with Volar, and TypeScript 7 has no in-process language service to decorate — organizing now happens in a separate language server process that knows nothing about Volar. The `vue-tsc` peer dependency is gone with it. If you need Vue support, stay on version 5.
 
 ## Debug Logs
 
@@ -108,7 +104,7 @@ bun run test       # typecheck, build, then run the test suite (what CI runs)
 
 `bun test` runs against `dist/index.js`, i. e. the artifact that actually gets published, so run `bun run build` after changing anything under `src/`.
 
-`typescript` is pinned to the `next` dist-tag, so `bun install` picks up a fresh 7.1 nightly and `bun.lock` records which one. A nightly can break the build on a day nobody touched the code; when it does, check the nightly's changes to `typescript/unstable` before assuming the plugin is at fault.
+`typescript` is pinned to the `next` dist-tag, so `bun install` picks up a fresh 7.1 nightly and `bun.lock` records which one. A nightly can break the tests on a day nobody touched the code; when it does, check what the language server now advertises (`codeActionProvider.codeActionKinds` in its `initialize` result) before assuming the plugin is at fault.
 
 ## Rationale/Disclaimer
 

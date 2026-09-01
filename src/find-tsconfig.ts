@@ -1,11 +1,26 @@
+import { existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { memoize } from './memoize.js';
-import { getTypeScript } from './load-typescript.js';
 
 /**
  * Find the path of the project's tsconfig from a path to a file in the project.
  */
 export const findTsconfig: (path: string) => string | undefined = memoize((path: string) => {
-	const ts = getTypeScript();
+	let directory = dirname(resolve(path));
 
-	return ts.findConfigFile(path, ts.sys.fileExists);
+	for (;;) {
+		const tsconfig = join(directory, 'tsconfig.json');
+
+		if (existsSync(tsconfig)) {
+			return tsconfig;
+		}
+
+		const parent = dirname(directory);
+
+		if (parent === directory) {
+			return undefined;
+		}
+
+		directory = parent;
+	}
 });

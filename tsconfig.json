@@ -15,6 +15,5 @@
 		"declaration": true,
 		"noEmit": true
 	},
-	"include": ["src", "test", "prettier.d.ts"],
-	"vueCompilerOptions": { "plugins": ["@vue/language-plugin-pug"] }
+	"include": ["src", "test", "prettier.d.ts"]
 }

@@ -1,37 +1,41 @@
-import { posix, sep } from 'node:path';
+import { dirname, extname, resolve } from 'node:path';
 import type { ParserOptions } from 'prettier';
-import { applyTextChanges } from './apply-text-changes.js';
-import { getLanguageService } from './get-language-service.js';
+import { applyTextEdits } from './apply-text-edits.js';
+import { findTsconfig } from './find-tsconfig.js';
+import type { LspSettings } from './lsp-server.js';
+import { getLspServer } from './lsp-server.js';
+
+const languageIds: Readonly<Record<string, string>> = {
+	'.cjs': 'javascript',
+	'.cts': 'typescript',
+	'.js': 'javascript',
+	'.jsx': 'javascriptreact',
+	'.mjs': 'javascript',
+	'.mts': 'typescript',
+	'.ts': 'typescript',
+	'.tsx': 'typescriptreact',
+};
 
 /**
  * Organize the given code's imports.
  */
-export const organize = (
+export const organize = async (
 	code: string,
-	{
-		filepath = 'file.ts',
-		organizeImportsSkipDestructiveCodeActions,
-		parentParser,
-		parser,
-		organizeImportsTypeOrder,
-	}: ParserOptions,
-): string => {
-	if (parentParser === 'vue') {
-		// we already did the preprocessing in the parent parser, so we skip the child parsers
-		return code;
-	}
+	{ filepath = 'file.ts', organizeImportsSkipDestructiveCodeActions, organizeImportsTypeOrder }: ParserOptions,
+): Promise<string> => {
+	const path = resolve(filepath);
+	const tsconfig = findTsconfig(path);
 
-	if (sep !== posix.sep) {
-		filepath = filepath.split(sep).join(posix.sep);
-	}
+	const server = await getLspServer(tsconfig ? dirname(tsconfig) : process.cwd(), {
+		organizeImportsTypeOrder: organizeImportsTypeOrder as LspSettings['organizeImportsTypeOrder'],
+	});
 
-	const languageService = getLanguageService(parser, filepath, code);
+	const edits = await server.organize(
+		path,
+		languageIds[extname(path)] ?? 'typescript',
+		code,
+		Boolean(organizeImportsSkipDestructiveCodeActions),
+	);
 
-	const fileChanges = languageService.organizeImports(
-		{ type: 'file', fileName: filepath, skipDestructiveCodeActions: organizeImportsSkipDestructiveCodeActions },
-		{},
-		{ organizeImportsTypeOrder },
-	)[0];
-
-	return fileChanges ? applyTextChanges(code, fileChanges.textChanges) : code;
+	return applyTextEdits(code, edits);
 };

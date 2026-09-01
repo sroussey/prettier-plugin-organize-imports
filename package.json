@@ -45,22 +45,14 @@
   },
   "peerDependencies": {
     "prettier": ">=3.9.6",
-    "typescript": ">=7.1.0-dev",
-    "vue-tsc": "^3.3.11"
-  },
-  "peerDependenciesMeta": {
-    "vue-tsc": {
-      "optional": true
-    }
+    "typescript": ">=7.1.0-dev"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",
     "@types/node": "24.5.2",
-    "@vue/language-plugin-pug": "3.3.11",
     "bunset": "^1.0.14",
     "prettier": "3.9.6",
-    "typescript": "next",
-    "vue-tsc": "3.3.11"
+    "typescript": "next"
   },
   "prettier": {
     "printWidth": 120,

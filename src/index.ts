@@ -1,13 +1,12 @@
 import type { Parser, ParserOptions, Plugin } from 'prettier';
 import { parsers as babelParsers } from 'prettier/plugins/babel';
-import { parsers as htmlParsers } from 'prettier/plugins/html';
 import { parsers as typescriptParsers } from 'prettier/plugins/typescript';
 import { organize } from './organize.js';
 
 /**
- * Organize the code's imports using the `organizeImports` feature of the TypeScript language service API.
+ * Organize the code's imports using the TypeScript language server's organize-imports code action.
  */
-const organizeImports = (code: string, options: ParserOptions): string => {
+const organizeImports = async (code: string, options: ParserOptions): Promise<string> => {
 	if (code.includes('// organize-imports-ignore') || code.includes('// tslint:disable:ordered-imports')) {
 		return code;
 	}
@@ -22,7 +21,7 @@ const organizeImports = (code: string, options: ParserOptions): string => {
 	}
 
 	try {
-		return organize(code, options);
+		return await organize(code, options);
 	} catch (error) {
 		if (process.env.DEBUG) {
 			console.error(error);
@@ -37,15 +36,8 @@ const organizeImports = (code: string, options: ParserOptions): string => {
  */
 const withOrganizeImportsPreprocess = (parser: Parser): Parser => ({
 	...parser,
-	preprocess: (code: string, options: ParserOptions): string | Promise<string> => {
-		const preprocessed = parser.preprocess ? parser.preprocess(code, options) : code;
-
-		// Prettier awaits `preprocess`, but staying synchronous whenever the wrapped parser is
-		// keeps this a plain function call for every parser that ships with Prettier today.
-		return typeof preprocessed === 'string'
-			? organizeImports(preprocessed, options)
-			: preprocessed.then((text) => organizeImports(text, options));
-	},
+	preprocess: async (code: string, options: ParserOptions): Promise<string> =>
+		organizeImports(parser.preprocess ? await parser.preprocess(code, options) : code, options),
 });
 
 const plugin: Plugin = {
@@ -80,7 +72,6 @@ const plugin: Plugin = {
 		babel: withOrganizeImportsPreprocess(babelParsers.babel),
 		'babel-ts': withOrganizeImportsPreprocess(babelParsers['babel-ts']),
 		typescript: withOrganizeImportsPreprocess(typescriptParsers.typescript),
-		vue: withOrganizeImportsPreprocess(htmlParsers.vue),
 	},
 };
 
