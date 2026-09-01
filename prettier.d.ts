@@ -1,13 +1,13 @@
-import ts = require('typescript');
+type OrganizeImportsTypeOrder = 'last' | 'first' | 'inline';
 
 declare module 'prettier' {
 	interface Options {
 		organizeImportsSkipDestructiveCodeActions?: boolean;
-		organizeImportsTypeOrder?: ts.OrganizeImportsTypeOrder;
+		organizeImportsTypeOrder?: OrganizeImportsTypeOrder;
 	}
 	interface ParserOptions {
 		organizeImportsSkipDestructiveCodeActions?: boolean;
-		organizeImportsTypeOrder?: ts.OrganizeImportsTypeOrder;
+		organizeImportsTypeOrder?: OrganizeImportsTypeOrder;
 	}
 }
 

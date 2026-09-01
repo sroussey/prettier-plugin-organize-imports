@@ -1,23 +1,13 @@
-/**
- * @todo change these to their new locations (`prettier/plugins/<parser>`) with
- * the next major release. (requires dropping Prettier 2.x support)
- */
-// @ts-expect-error
-const { parsers: babelParsers } = require('prettier/parser-babel');
-// @ts-expect-error
-const { parsers: htmlParsers } = require('prettier/parser-html');
-// @ts-expect-error
-const { parsers: typescriptParsers } = require('prettier/parser-typescript');
-
-const { organize } = require('./lib/organize');
+import type { Parser, ParserOptions, Plugin } from 'prettier';
+import { parsers as babelParsers } from 'prettier/plugins/babel';
+import { parsers as htmlParsers } from 'prettier/plugins/html';
+import { parsers as typescriptParsers } from 'prettier/plugins/typescript';
+import { organize } from './organize.js';
 
 /**
  * Organize the code's imports using the `organizeImports` feature of the TypeScript language service API.
- *
- * @param {string} code
- * @param {import('prettier').ParserOptions} options
  */
-const organizeImports = (code, options) => {
+const organizeImports = (code: string, options: ParserOptions): string => {
 	if (code.includes('// organize-imports-ignore') || code.includes('// tslint:disable:ordered-imports')) {
 		return code;
 	}
@@ -44,25 +34,21 @@ const organizeImports = (code, options) => {
 
 /**
  * Set `organizeImports` as the given parser's `preprocess` hook, or merge it with the existing one.
- *
- * @param {import('prettier').Parser} parser prettier parser
  */
-const withOrganizeImportsPreprocess = (parser) => {
-	return {
-		...parser,
-		/**
-		 * @param {string} code
-		 * @param {import('prettier').ParserOptions} options
-		 */
-		preprocess: (code, options) =>
-			organizeImports(parser.preprocess ? parser.preprocess(code, options) : code, options),
-	};
-};
+const withOrganizeImportsPreprocess = (parser: Parser): Parser => ({
+	...parser,
+	preprocess: (code: string, options: ParserOptions): string | Promise<string> => {
+		const preprocessed = parser.preprocess ? parser.preprocess(code, options) : code;
 
-/**
- * @type {import('prettier').Plugin}
- */
-const plugin = {
+		// Prettier awaits `preprocess`, but staying synchronous whenever the wrapped parser is
+		// keeps this a plain function call for every parser that ships with Prettier today.
+		return typeof preprocessed === 'string'
+			? organizeImports(preprocessed, options)
+			: preprocessed.then((text) => organizeImports(text, options));
+	},
+});
+
+const plugin: Plugin = {
 	options: {
 		organizeImportsSkipDestructiveCodeActions: {
 			type: 'boolean',
@@ -98,4 +84,4 @@ const plugin = {
 	},
 };
 
-module.exports = plugin;
+export default plugin;

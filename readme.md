@@ -1,14 +1,17 @@
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/simonhaenisch/prettier-plugin-organize-imports/test.yml?label=CI)](https://github.com/simonhaenisch/prettier-plugin-organize-imports/actions?query=branch%3Amaster)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sroussey/prettier-plugin-organize-imports/test.yml?label=CI)](https://github.com/sroussey/prettier-plugin-organize-imports/actions?query=branch%3Amaster)
 
 # Prettier Plugin: Organize Imports
 
 > Make sure that your import statements stay consistent no matter who writes them and what their preferences are.
 
+_This is a fork of [`prettier-plugin-organize-imports`](https://github.com/simonhaenisch/prettier-plugin-organize-imports) published as `@sroussey/prettier-plugin-organize-imports`. It brings its own TypeScript instead of relying on the project's (which TypeScript 7 made impossible), ships as **ESM only** (so it requires Prettier 3), and is written in TypeScript, built and tested with [Bun](https://bun.sh). The plugin's behaviour and options are otherwise unchanged._
+
 A plugin that makes Prettier organize your imports (i. e. sorts, combines and removes unused ones) using the `organizeImports` feature of the TypeScript language service API. This is the same as using the "Organize Imports" action in VS Code.
 
 **Features**
 
-- 👌 Dependency-free (just peer-dependencies you probably already have).
+- 👌 One dependency (its own TypeScript), and `prettier` as the only required peer.
+- 📦 ESM only, shipped as a single bundled file with type declarations.
 - 💪 Supports `.js`, `.jsx`, `.ts`, `.tsx` and `.vue` files.
 - 🚀 Zero config.
 - 🤓 No more weird diffs or annoying merge conflicts in PRs caused by import statements.
@@ -21,28 +24,30 @@ This plugin inherits, extends, and then overrides the built-in Prettier parsers 
 ## Installation
 
 ```sh
-npm install --save-dev prettier-plugin-organize-imports
+npm install --save-dev @sroussey/prettier-plugin-organize-imports
 ```
 
-_Note that `prettier` and `typescript` are peer dependencies, so make sure you have those installed in your project._
+_`prettier` is the only required peer dependency. This package is ESM only and requires Prettier 3._
+
+### TypeScript
+
+The plugin brings its own TypeScript. It depends on [`@typescript/typescript6`](https://www.npmjs.com/package/@typescript/typescript6) and organizes imports with that language service, so it works whatever version of `typescript` your project has — or none at all.
+
+This is deliberate. TypeScript 7.0 dropped the programmatic language service API this plugin is built on ([announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0)), so following the project's own TypeScript is no longer possible. Owning the dependency also means one less peer dependency to keep in range, and the same sorting behaviour across every project.
+
+The trade-off is that the plugin sorts with TypeScript 6's language service rather than your project's version, so in principle it can disagree with your editor's own "Organize Imports" action if you're on a different one.
 
 ## Usage
 
-### Prettier 3
-
-Automatic plugin discovery [has been removed](https://prettier.io/blog/2023/07/05/3.0.0.html#plugin-search-feature-has-been-removed-14759httpsgithubcomprettierprettierpull14759-by-fiskerhttpsgithubcomfisker). Thus you need to configure Prettier to use the plugin according to the [Plugins docs](https://prettier.io/docs/en/plugins.html), for example by adding it to the `plugins` config option:
+Automatic plugin discovery [has been removed in Prettier 3](https://prettier.io/blog/2023/07/05/3.0.0.html#plugin-search-feature-has-been-removed-14759httpsgithubcomprettierprettierpull14759-by-fiskerhttpsgithubcomfisker). Thus you need to configure Prettier to use the plugin according to the [Plugins docs](https://prettier.io/docs/en/plugins.html), for example by adding it to the `plugins` config option:
 
 ```json
 {
-  "plugins": ["prettier-plugin-organize-imports"]
+  "plugins": ["@sroussey/prettier-plugin-organize-imports"]
 }
 ```
 
-### Prettier 2
-
-The plugin will be loaded by Prettier automatically. No configuration needed.
-
-Note that automatic plugin discovery is not supported with some package managers, e. g. Yarn PnP (see https://github.com/prettier/prettier/issues/8474). In that case follow the instructions for Prettier 3 above.
+This works from a CommonJS project too — Prettier loads plugins with a dynamic `import()`, so the plugin being ESM doesn't constrain your own project's module format.
 
 ## Configuration
 
@@ -83,6 +88,23 @@ If you're using Vue.js with Pug templates, you'll also need to install `@vue/lan
 ## Debug Logs
 
 If something doesn't work, you can try to prefix your `prettier` command with `DEBUG=true` which will enable this plugin to print some logs.
+
+## Development
+
+This package is written in TypeScript and uses [Bun](https://bun.sh) as its package manager, bundler and test runner.
+
+```sh
+bun install        # install dependencies
+bun run build      # bundle src/ to dist/index.js (ESM) and emit type declarations
+bun run typecheck  # typecheck the library and the tests
+bun run format     # format with prettier
+bun test           # run the test suite against the built plugin
+bun run test       # typecheck, build, then run the test suite (what CI runs)
+```
+
+`bun test` runs against `dist/index.js`, i. e. the artifact that actually gets published, so run `bun run build` after changing anything under `src/`.
+
+The scripts call `tsc6` rather than `tsc`: `typescript` and `@typescript/old` both claim the `tsc` bin, so which one `tsc` resolves to depends on install order. `typescript` itself is only a devDependency here, because `@vue/language-core`'s types import from it.
 
 ## Rationale/Disclaimer
 

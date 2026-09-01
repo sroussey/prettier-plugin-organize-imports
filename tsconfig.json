@@ -1,11 +1,20 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es2015",
-		"checkJs": true,
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"target": "es2022",
+		"lib": ["es2022"],
+		"types": ["node", "bun"],
 		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
+		"verbatimModuleSyntax": true,
+		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true,
+		"declaration": true,
 		"noEmit": true
 	},
+	"include": ["src", "test", "prettier.d.ts"],
 	"vueCompilerOptions": { "plugins": ["@vue/language-plugin-pug"] }
 }

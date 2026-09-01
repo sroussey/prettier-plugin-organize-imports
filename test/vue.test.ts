@@ -1,8 +1,8 @@
-const test = require('ava').default;
-const ts = require('typescript');
-const { prettify } = require('./_utils');
+import { expect, test } from 'bun:test';
+import ts from '@typescript/typescript6';
+import { nthLine, prettify } from './utils.js';
 
-test('works with TypeScript code inside Vue files', async (t) => {
+test('works with TypeScript code inside Vue files', async () => {
 	const code = `
 		<script lang="ts">
 			import  {defineComponent,compile} from 'vue';
@@ -13,10 +13,10 @@ test('works with TypeScript code inside Vue files', async (t) => {
 
 	const formattedCode = await prettify(code, { filepath: 'file.vue' });
 
-	t.is(formattedCode.split('\n')[1], `import { compile, defineComponent } from "vue";`);
+	expect(nthLine(1)(formattedCode)).toBe(`import { compile, defineComponent } from "vue";`);
 });
 
-test('works with Vue setup scripts', async (t) => {
+test('works with Vue setup scripts', async () => {
 	const code = `
 		<script setup lang="ts">
 			import  {defineComponent,compile} from 'vue';
@@ -26,10 +26,10 @@ test('works with Vue setup scripts', async (t) => {
 
 	const formattedCode = await prettify(code, { filepath: 'file.vue' });
 
-	t.is(formattedCode.split('\n')[1], `import { defineComponent } from "vue";`);
+	expect(nthLine(1)(formattedCode)).toBe(`import { defineComponent } from "vue";`);
 });
 
-test('preserves new lines and comments in Vue files', async (t) => {
+test('preserves new lines and comments in Vue files', async () => {
 	const code = `<script lang="ts">
 import { defineComponent, ref } from "vue";
 export default defineComponent({
@@ -47,10 +47,10 @@ export default defineComponent({
 
 	const formattedCode = await prettify(code, { filepath: 'file.vue' });
 
-	t.is(formattedCode, code);
+	expect(formattedCode).toBe(code);
 });
 
-test('does not remove imports when Vue components use kebab case', async (t) => {
+test('does not remove imports when Vue components use kebab case', async () => {
 	const code = `<template>
   <div>
     <n-divider />
@@ -64,10 +64,10 @@ import { NDivider } from "naive-ui";
 
 	const formattedCode = await prettify(code, { filepath: 'file.vue' });
 
-	t.is(formattedCode, code);
+	expect(formattedCode).toBe(code);
 });
 
-test('works with pug templates in Vue files', async (t) => {
+test('works with pug templates in Vue files', async () => {
 	const code = `<script setup lang="ts">
 import { Foo, Bar } from "@/components";
 </script>
@@ -88,10 +88,10 @@ Foo
 
 	const formattedCode = await prettify(code, { filepath: 'file.vue' });
 
-	t.is(formattedCode, expected);
+	expect(formattedCode).toBe(expected);
 });
 
-test.serial('works with Volar language plugins when not running from the project root', async (t) => {
+test('works with Volar language plugins when not running from the project root', async () => {
 	const originalGetCurrentDir = ts.sys.getCurrentDirectory;
 
 	ts.sys.getCurrentDirectory = () => '/';
@@ -114,9 +114,11 @@ Foo
 </template>
 `;
 
-	const formattedCode = await prettify(code, { filepath: 'file.vue' });
+	try {
+		const formattedCode = await prettify(code, { filepath: 'file.vue' });
 
-	t.is(formattedCode, expected);
-
-	ts.sys.getCurrentDirectory = originalGetCurrentDir;
+		expect(formattedCode).toBe(expected);
+	} finally {
+		ts.sys.getCurrentDirectory = originalGetCurrentDir;
+	}
 });

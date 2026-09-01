@@ -1,17 +1,21 @@
-const { sep, posix } = require('path');
-const { applyTextChanges } = require('./apply-text-changes');
-const { getLanguageService } = require('./get-language-service');
+import { posix, sep } from 'node:path';
+import type { ParserOptions } from 'prettier';
+import { applyTextChanges } from './apply-text-changes.js';
+import { getLanguageService } from './get-language-service.js';
 
 /**
  * Organize the given code's imports.
- *
- * @param {string} code
- * @param {import('prettier').ParserOptions} options
  */
-module.exports.organize = (
-	code,
-	{ filepath = 'file.ts', organizeImportsSkipDestructiveCodeActions, parentParser, parser, organizeImportsTypeOrder },
-) => {
+export const organize = (
+	code: string,
+	{
+		filepath = 'file.ts',
+		organizeImportsSkipDestructiveCodeActions,
+		parentParser,
+		parser,
+		organizeImportsTypeOrder,
+	}: ParserOptions,
+): string => {
 	if (parentParser === 'vue') {
 		// we already did the preprocessing in the parent parser, so we skip the child parsers
 		return code;
