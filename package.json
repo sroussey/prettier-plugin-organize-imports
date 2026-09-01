@@ -23,8 +23,8 @@
   "scripts": {
     "build": "bun run build:js && bun run build:types",
     "build:js": "bun build ./src/index.ts --target=node --format=esm --packages=external --outfile=./dist/index.js",
-    "build:types": "tsc6 -p tsconfig.build.json",
-    "typecheck": "tsc6 -p tsconfig.json",
+    "build:types": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "bun run typecheck && bun run build && bun test",
@@ -43,11 +43,9 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@typescript/typescript6": "^6.0.2"
-  },
   "peerDependencies": {
     "prettier": ">=3.9.6",
+    "typescript": ">=7.1.0-dev",
     "vue-tsc": "^3.3.11"
   },
   "peerDependenciesMeta": {
@@ -61,7 +59,7 @@
     "@vue/language-plugin-pug": "3.3.11",
     "bunset": "^1.0.14",
     "prettier": "3.9.6",
-    "typescript": "7.0.2",
+    "typescript": "next",
     "vue-tsc": "3.3.11"
   },
   "prettier": {
