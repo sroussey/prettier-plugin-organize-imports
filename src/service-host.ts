@@ -1,18 +1,17 @@
-const { dirname } = require('path');
-const { ts } = require('./load-typescript');
-const { findTsconfig } = require('./find-tsconfig');
-
-const { getCompilerOptions } = require('./get-compiler-options');
+import { dirname } from 'node:path';
+import type { LanguageServiceHost } from '@typescript/typescript6';
+import { findTsconfig } from './find-tsconfig.js';
+import { getCompilerOptions } from './get-compiler-options.js';
+import { getTypeScript } from './load-typescript.js';
 
 /**
  * Create the most basic TS language service host for the given file to make import sorting work.
  *
- * @param {string} path path to file
- * @param {string} content file's content
- *
- * @returns {import('typescript').LanguageServiceHost}
+ * @param path path to file
+ * @param content file's content
  */
-function getTypeScriptLanguageServiceHost(path, content) {
+export function getTypeScriptLanguageServiceHost(path: string, content: string): LanguageServiceHost {
+	const ts = getTypeScript();
 	const tsconfig = findTsconfig(path);
 	const compilerOptions = getCompilerOptions(tsconfig);
 	const snapshot = ts.ScriptSnapshot.fromString(content);
@@ -29,12 +28,6 @@ function getTypeScriptLanguageServiceHost(path, content) {
 		getNewLine: () => ts.sys.newLine,
 		getScriptFileNames: () => [path],
 		getScriptVersion: () => '0',
-		getScriptSnapshot: (filePath) => {
-			if (filePath === path) {
-				return snapshot;
-			}
-		},
+		getScriptSnapshot: (filePath) => (filePath === path ? snapshot : undefined),
 	};
 }
-
-module.exports = { getTypeScriptLanguageServiceHost };

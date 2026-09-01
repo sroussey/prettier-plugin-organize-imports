@@ -1,6 +1,6 @@
 {
-  "name": "prettier-plugin-organize-imports",
-  "version": "4.3.0",
+  "name": "@sroussey/prettier-plugin-organize-imports",
+  "version": "5.0.0",
   "description": "Make prettier organize your imports using the TypeScript language service API.",
   "keywords": [
     "prettier",
@@ -9,41 +9,60 @@
     "imports",
     "organize-imports"
   ],
-  "main": "index.js",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./prettier.d.ts": "./prettier.d.ts",
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "test": "tsc && ava --verbose",
-    "preversion": "npm test"
+    "build": "bun run build:js && bun run build:types",
+    "build:js": "bun build ./src/index.ts --target=node --format=esm --packages=external --outfile=./dist/index.js",
+    "build:types": "tsc6 -p tsconfig.build.json",
+    "typecheck": "tsc6 -p tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "bun run typecheck && bun run build && bun test",
+    "prepare": "bun run build",
+    "prepack": "bun run build",
+    "preversion": "bun run test"
   },
   "files": [
-    "index.js",
-    "lib",
+    "dist",
     "prettier.d.ts"
   ],
   "author": "Simon Haenisch (https://github.com/simonhaenisch)",
   "license": "MIT",
-  "repository": "simonhaenisch/prettier-plugin-organize-imports",
-  "homepage": "https://github.com/simonhaenisch/prettier-plugin-organize-imports#readme",
+  "repository": "sroussey/prettier-plugin-organize-imports",
+  "homepage": "https://github.com/sroussey/prettier-plugin-organize-imports#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@typescript/typescript6": "^6.0.2"
+  },
   "peerDependencies": {
-    "@typescript/typescript6": "^6",
-    "prettier": ">=2.0",
-    "typescript": ">=2.9",
-    "vue-tsc": "^2.1.0 || 3"
+    "prettier": ">=3.9.6",
+    "vue-tsc": "^3.3.11"
   },
   "peerDependenciesMeta": {
-    "@typescript/typescript6": {
-      "optional": true
-    },
     "vue-tsc": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@types/bun": "1.4.0",
     "@types/node": "24.5.2",
-    "@vue/language-plugin-pug": "3.0.7",
-    "ava": "6.4.1",
-    "prettier": "3.6.2",
-    "typescript": "5.9.2",
-    "vue-tsc": "3.0.7"
+    "@vue/language-plugin-pug": "3.3.11",
+    "bunset": "^1.0.14",
+    "prettier": "3.9.6",
+    "typescript": "7.0.2",
+    "vue-tsc": "3.3.11"
   },
   "prettier": {
     "printWidth": 120,
